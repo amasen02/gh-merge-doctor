@@ -10,9 +10,21 @@ For example, a PR can show a green matrix while branch protection still requires
 with the SHA and evidence URL attached. The tool does not call that PR ready merely
 because visible checks are green.
 
-## Install from source
+## Install as a GitHub CLI extension
 
-There is no published binary release yet. Build from source with Go 1.23 or newer:
+Install the extension from the repository, then invoke it as `gh merge-doctor`:
+
+```sh
+gh extension install amasen02/gh-merge-doctor
+gh merge-doctor --demo
+```
+
+The demo intentionally exits `1` because its synthetic missing-`ci` case is
+blocked. Use `gh merge-doctor --version` to record the installed version.
+
+## Standalone installation from source
+
+Build a standalone executable with Go 1.23 or newer:
 
 ```sh
 git clone https://github.com/amasen02/gh-merge-doctor.git
@@ -25,6 +37,13 @@ go test ./...
 
 On Windows, build `gh-merge-doctor.exe` and invoke that executable from PowerShell.
 The project uses only the Go standard library and has no telemetry or hosted service.
+
+Native v0.1.0 binaries are available on the [v0.1.0 release
+page](https://github.com/amasen02/gh-merge-doctor/releases/tag/v0.1.0), with the
+matching [SHA256SUMS file](https://github.com/amasen02/gh-merge-doctor/releases/download/v0.1.0/SHA256SUMS).
+Download the raw executable for your platform and compare its digest with the
+matching manifest line before running it. On Unix, add execute permission if needed:
+`chmod +x ./gh-merge-doctor-*`.
 
 ## Thirty-second offline demo
 

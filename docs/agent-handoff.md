@@ -12,7 +12,7 @@ Give a shell-capable agent this instruction:
 ```text
 When a pull request appears green but its merge state is unclear, run:
 
-  gh-merge-doctor --repo OWNER/REPOSITORY --pr PR_NUMBER --json --receipt merge-doctor.json
+  gh merge-doctor --repo OWNER/REPOSITORY --pr PR_NUMBER --json --receipt merge-doctor.json
 
 Read status, summary, blockers, next_steps, limitations, head_sha, and selected_sha.
 Treat exit 3 or status unknown as incomplete evidence. Do not infer that absent API
@@ -22,8 +22,17 @@ PR is already merged or closed. Present the evidence and next step to a human.
 Do not install hooks, edit repository settings, rerun workflows, apply fixes, or merge.
 ```
 
-This is provider-neutral shell guidance. It is not a tested vendor plugin and does
-not install an automatic hook or perform an automatic action.
+The extension setup is:
+
+```sh
+gh extension install amasen02/gh-merge-doctor
+gh merge-doctor --demo
+```
+
+The demo intentionally exits `1` for its synthetic missing-required-context blocker.
+This is provider-neutral shell guidance, not a tested vendor plugin, and it does not
+install an automatic hook or perform an automatic action. A standalone source build
+uses the same flags after `go build -o gh-merge-doctor ./cmd/gh-merge-doctor`.
 
 ## Result contract
 
@@ -63,3 +72,10 @@ Use `--fixture PATH --json` for a checked-in or locally generated snapshot. Fixt
 mode does not call GitHub or read `gh` credentials. Live mode currently supports
 `github.com` and uses native `gh` authentication for bounded read-only requests.
 Use `--version` when recording the tool version alongside a handoff.
+
+Native v0.1.0 binaries and their [SHA256SUMS
+manifest](https://github.com/amasen02/gh-merge-doctor/releases/download/v0.1.0/SHA256SUMS)
+are available from the [v0.1.0 release page](https://github.com/amasen02/gh-merge-doctor/releases/tag/v0.1.0).
+Verify the matching digest before executing a raw platform binary; on Unix, use
+`chmod +x ./gh-merge-doctor-*` if execute permission is absent. The manifest hash
+is a content comparison aid, not a signature, attestation, or provenance proof.
