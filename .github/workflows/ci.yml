@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: ${{ matrix.asset }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: linux-amd64
+          - os: windows-latest
+            asset: windows-amd64
+          - os: macos-14
+            asset: darwin-arm64
+          - os: macos-15-intel
+            asset: darwin-amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.x'
+          cache: false
+      - name: Format, vet, and test
+        shell: pwsh
+        run: |
+          $unformatted = gofmt -l cmd internal
+          if ($LASTEXITCODE -ne 0 -or $unformatted) { throw "gofmt reported unformatted files: $unformatted" }
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) { throw "go vet failed" }
+          go test ./...
+          if ($LASTEXITCODE -ne 0) { throw "go test failed" }
+      - name: Race test on Linux
+        if: runner.os == 'Linux'
+        shell: pwsh
+        run: go test -race ./...
+      - name: Build native binary
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $extension = if ($IsWindows) { '.exe' } else { '' }
+          $output = "dist/gh-merge-doctor-${{ matrix.asset }}$extension"
+          go build -trimpath -o $output ./cmd/gh-merge-doctor
+          if ($LASTEXITCODE -ne 0) { throw "go build failed" }
+          if (!(Test-Path $output)) { throw "native binary was not produced" }
+      - name: Run offline demo
+        shell: pwsh
+        run: |
+          $binary = Get-ChildItem dist/gh-merge-doctor-* | Where-Object { $_.Name -notlike '*SHA256SUMS*' } | Select-Object -First 1
+          & $binary.FullName --demo --json > dist/demo.json
+          $code = $LASTEXITCODE
+          if ($code -ne 1) { throw "demo must exit 1 for its intentional missing-context blocker; got $code" }
+          if (-not (Select-String -Path dist/demo.json -Pattern 'MISSING_REQUIRED_CHECK')) { throw 'demo evidence is missing the required-context finding' }
+          exit 0
+      - name: Checksum native artifact
+        shell: pwsh
+        run: |
+          $binary = Get-ChildItem dist/gh-merge-doctor-* | Where-Object { $_.Name -notlike '*SHA256SUMS*' -and $_.Name -notlike '*demo*' } | Select-Object -First 1
+          $hash = (Get-FileHash -Algorithm SHA256 $binary.FullName).Hash.ToLowerInvariant()
+          "$hash  $($binary.Name)" | Set-Content -NoNewline dist/SHA256SUMS
+      - name: Upload native artifact and evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-${{ matrix.asset }}
+          path: dist
+          if-no-files-found: error

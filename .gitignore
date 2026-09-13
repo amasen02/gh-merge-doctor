@@ -1,0 +1,19 @@
+# Build output
+/gh-merge-doctor
+/gh-merge-doctor.exe
+/bin/
+/dist/
+/coverage/
+*.test
+*.prof
+
+# Local diagnostic evidence
+merge-doctor.json
+*.receipt.json
+.tmp/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

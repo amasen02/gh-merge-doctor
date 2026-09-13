@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "repo": "demo/example",
+  "pr": 1,
+  "state": "open",
+  "merged": false,
+  "draft": false,
+  "head_sha": "demo-head-sha",
+  "base_sha": "demo-base-sha",
+  "base_ref": "main",
+  "mergeable": "MERGEABLE",
+  "mergeable_state": "clean",
+  "policy": {
+    "known": true,
+    "required_status_checks": [
+      {
+        "context": "ci"
+      }
+    ]
+  },
+  "check_runs": [
+    {
+      "name": "build-test (ubuntu-latest)",
+      "sha": "demo-head-sha",
+      "status": "completed",
+      "conclusion": "success",
+      "source_known": true
+    },
+    {
+      "name": "build-test (windows-latest)",
+      "sha": "demo-head-sha",
+      "status": "completed",
+      "conclusion": "success",
+      "source_known": true
+    }
+  ]
+}
